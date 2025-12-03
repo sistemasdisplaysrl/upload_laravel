@@ -1,0 +1,21 @@
+# Excluir archivos innecesarios del contexto de build
+node_modules/
+vendor/
+.git/
+.env
+.env.*
+!.env.example
+
+# Excluir symlink problemático (se recreará en runtime)
+app/public/storage
+
+# Archivos de desarrollo
+*.log
+.phpunit.result.cache
+phpunit.xml
+tests/
+.editorconfig
+.gitignore
+.gitattributes
+README.md
+docker-compose.yml
