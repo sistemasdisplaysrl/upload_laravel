@@ -20,7 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $ajustes = Ajuste::first();
-        view()->share('ajustes', $ajustes);
+        try {
+            $ajustes = Ajuste::first();
+            view()->share('ajustes', $ajustes);
+        } catch (\Exception $e) {
+            // Evitar error si la base de datos no está lista (ej. durante composer install)
+        }
     }
 }
