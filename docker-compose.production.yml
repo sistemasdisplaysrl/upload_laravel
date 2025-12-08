@@ -1,0 +1,35 @@
+services:
+  laravel_manuales:
+    image: display2025/upload_laravel:latest
+    container_name: laravel_manuales
+    working_dir: /var/www/html/app
+    ports:
+      - "9000:80"
+    volumes:
+      - /home/sistemas_displaysrl/display-cloud/storage:/var/www/html/app/storage/app/public/manuales
+    environment:
+      # Database
+      DB_HOST: mysql
+      DB_DATABASE: manual_management
+      DB_USERNAME: rag-user
+      DB_PASSWORD: Info2025+
+      DB_PORT: 3306
+
+      # Application
+      APP_NAME: "Manuales Display"
+      APP_ENV: production
+      APP_DEBUG: false
+      APP_URL: https://manuales-display.duckdns.org
+
+      # RAG Integration
+      RAG_API_URL: http://rag-python:8000
+
+    networks:
+      - rag-net
+    restart: unless-stopped
+    depends_on:
+      - mysql
+
+networks:
+  rag-net:
+    external: true

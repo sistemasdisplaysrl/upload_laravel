@@ -4,12 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Manual;
 use App\Models\Cargo;
+use App\Services\RagService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ManualController extends Controller
 {
+    protected $ragService;
+
+    public function __construct(RagService $ragService)
+    {
+        $this->ragService = $ragService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -75,13 +83,31 @@ class ManualController extends Controller
 
             Manual::where('cargo_id', $cargoId)->update(['estado' => 'NO VIGENTE']);
 
-            Manual::create([
+            $manual = Manual::create([
                 'cargo_id' => $cargoId,
                 'nombre' => strtoupper($request->nombre),
                 'version' => $nextVersion,
                 'archivo' => $filename,
                 'estado' => 'VIGENTE',
             ]);
+
+            // Ingestar en RAG
+            $cargo = Cargo::find($cargoId);
+            $docId = 'manual-' . $cargo->id . '-v' . $nextVersion;
+            
+            $ragResult = $this->ragService->ingestPdf(
+                $filename,
+                $docId,
+                $cargo->cargo,
+                (string) $nextVersion
+            );
+
+            if (!$ragResult['success']) {
+                Log::warning('RAG ingestion failed but manual was saved', [
+                    'manual_id' => $manual->id,
+                    'error' => $ragResult['error']
+                ]);
+            }
         });
 
         return redirect()->route('admin.manuales.index')
@@ -134,6 +160,24 @@ class ManualController extends Controller
                 Storage::disk('public')->putFileAs('manuales', $file, $filename);
                 Storage::disk('public')->setVisibility('manuales/' . $filename, 'public');
                 $manual->archivo = $filename;
+                
+                // Ingestar en RAG si se actualizó el archivo
+                $cargo = Cargo::find($cargoId);
+                $docId = 'manual-' . $cargo->id . '-v' . $manual->version;
+                
+                $ragResult = $this->ragService->ingestPdf(
+                    $filename,
+                    $docId,
+                    $cargo->cargo,
+                    (string) $manual->version
+                );
+
+                if (!$ragResult['success']) {
+                    Log::warning('RAG ingestion failed but manual was updated', [
+                        'manual_id' => $manual->id,
+                        'error' => $ragResult['error']
+                    ]);
+                }
             }
 
             $manual->save();
