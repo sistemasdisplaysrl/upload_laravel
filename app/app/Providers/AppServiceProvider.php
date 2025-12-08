@@ -20,6 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Forzar HTTPS cuando está detrás de un proxy
+        if (env('APP_FORCE_HTTPS', false)) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         try {
             $ajustes = Ajuste::first();
             view()->share('ajustes', $ajustes);
