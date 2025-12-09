@@ -22,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Forzar HTTPS cuando está detrás de un proxy
         if (env('APP_FORCE_HTTPS', false)) {
+            // Confiar en todos los proxies (Nginx)
+            request()->server->set('HTTPS', 'on');
+            request()->server->set('SERVER_PORT', 443);
+            
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
