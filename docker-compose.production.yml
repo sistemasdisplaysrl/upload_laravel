@@ -1,6 +1,6 @@
 services:
   laravel_app:
-    image: display2025/upload_laravel:latest
+    build: .
     container_name: laravel_app
     working_dir: /var/www/html/app
     volumes:
