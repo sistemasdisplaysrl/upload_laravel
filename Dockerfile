@@ -48,7 +48,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 COPY app/ .
 
 # Generar autoloader optimizado
-RUN composer dump-autoload --optimize
+RUN composer dump-autoload --optimize || true
 
 # Recrear el symlink de storage (excluido en .dockerignore)
 RUN php artisan storage:link || true
